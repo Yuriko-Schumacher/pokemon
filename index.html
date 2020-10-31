@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset='utf-8' >
+		<title>Statistics of Pokémon</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<div id="container">
+			<div id="header">
+				<div id="title"><h1>Statistics of Pokémon</h1></div>
+				<div id="info">
+					ARTG 5330
+					<br>Yuriko Schumacher
+					<br>10/13/2020
+				</div>
+			</div>
+			<div id="body">
+				<div class="sidebar" id="left">
+					<ul>
+						<li><a href="#intro">Introducing the data</a></li>
+						<li><a href="#csv">Load the CSV file</a></li>
+						<li><a href="#viz1">Average overall strength per type</a></li>
+						<li><a href="#viz2">Base comparison of legendary pokémon</a></li>
+					</ul>
+				</div>
+				<div id="main-content">
+					<div id="intro">
+					<h2>Introducing the data</h2>
+					<p>
+						In this excercise, <a href="https://www.kaggle.com/abcsds/pokemon" target="_blank">data from kaggle</a> are used. The data show the base statistics of 721 pokémons from generations one to six. I am analyzing the data because I am a pokémon fan and thought they would be perfect for this exercise.
+					</p>
+					<p>
+						Each row corresponds to a single pokémon. For each pokémon, it has the following variables:
+					</p>
+					<ul>
+						<li><b>#</b>: ID number of the pokémon</li>
+						<li><b>Name</b>: Name of the pokémon</li>
+						<li><b>Type 1</b>: The type of the pokémon, which determines resistance/weakness to attacks</li>
+						<li><b>Type 2</b>: The second type held by some of the pokémon</li>
+						<li><b>Total</b>: The sum of all base statistics of the pokémon</li>
+						<li><b>HP</b>: Hit Points, how much damage the pokémon can receive before fainting</li>
+						<li><b>Attack</b>: The base modifier for physical attacks</li>
+						<li><b>Defense</b>: The base damage resistance against physical attacks</li>
+						<li><b>SP Atk</b>: Special Attack, the base modifier for special attacks</li>
+						<li><b>SP Def</b>: Special Defence, the base damage resistance against special attacks</li>
+						<li><b>Speed</b>: The base modifier for the pokémon's speed which determines the order of pokémon that can act in battles</li>
+						<li><b>Generation</b>: The generation where the pokémon is grouped in</li>
+						<li><b>Legendary</b>: Shows "TRUE" or "FALSE" according to whether the pokémon is grouped as legendary or not</li>
+					</ul>
+					<p>
+						When I played the pokémon game, I often encountered the situation where I needed to choose which pokémon to catch or carry with me. For example, for the 1st generation, the player needs to choose between <a href="https://www.pokemon.com/us/pokedex/bulbasaur" target="_blank"><i>Bulbasaur</i></a> ("Grass" type), <a href="https://www.pokemon.com/us/pokedex/charmander" target="_blank"><i>Charmander</i></a> ("Fire" type), and <a href="https://www.pokemon.com/us/pokedex/squirtle" target="_blank"><i>Squirtle</i></a> ("Water" type) as their first pokémon. Each pokémon has at least one type, and pokémon's type is one of the important factors to determine their strengths because some types of attacks are extremely effective to other types of pokémons.
+					</p>
+					<p>
+						Therefore, I'll analyze the pokémons' strengths for each type and determine which type of pokémons are stronger overall.
+					</p>
+					<p>
+						Additionally, in every generation of the game, you'll eventually get a chance to catch a legendary pokémon, extremely rare and strong pokémon. However, you usually need to choose only one pokémon to catch and give up on the other ones. So I'll analyze the data to compare the base statistics of particular legendary pokémons in order to make a better decision when it comes to choose between them.
+					</p>
+					<p>
+						With this in mind, I'm going to answer the following questions:
+					</p>
+					<ul>
+						<li>What types of pokémons are stronger overall?</li>
+						<li>What are the differences in base statistics of particular legendary pokémons?</li>
+					</ul>
+					<p>
+						To answer these questions, I'm going to analyze the data with R and create the visualizations that show the following:
+					</p>
+					<ol>
+						<li><a href="#viz1">Average overall strength of pokémons for each type</a></li>
+						<li><a href="#viz2">Base stats comparison of particular legendary pokémons</a></li>
+					</ol>
+					</div>
+					<div id="csv">
+					<h2>Load the CSV file</h2>
+					<p>
+						First, I'm going to load the CSV file from my computer.
+					</p>
+					<pre>
+pokemon &lt;- read_csv("data/Pokemon.csv")
+View(pokemon)
+head(pokemon)</pre>
+					</div>
+					<div id="viz1">
+						<h2>Average overall strength of pokémons for each type</h2>
+						<p>
+							In the dataset, the column "Total" shows "a general guide to how strong a pokemon is", according to a data description written by the creater of the data <b>Myles O'Neill</b>.
+							<br>Now, I'm going to create a lollipop chart that shows average overall strength for each type of pokémons. I'll exclude the legendary pokémons because they can be considered as outliers.
+						</p>
+						<p>
+							Here, firstly I exclude the legendary pokémons and calculate the average numbers of the "Total" values for each 1st type of Pokémons. (Some pokémons don't have 2nd types, so I just focused on the 1st types.) 
+						</p>
+						<p>
+							Then I reorder the values of the average strength.
+						</p>
+						<p>
+							Mapping the data into visualization, I layer the lines using "geom_segment" and the points using "geom_point". Here, I used <a href="https://www.r-graph-gallery.com/lollipop-plot.html" target="_blank">the R Graph Gallery</a> as a reference.
+						</p>
+						<div>
+							<pre>
+pokemon %>% 
+	filter(Legendary == "FALSE") %>% 
+	group_by(`Type 1`) %>% 
+	summarize(avg.strength = mean(Total, na.rm = TRUE)) %>% 
+	arrange(avg.strength) %>% 
+	mutate(`Type 1` = factor(`Type 1`, levels = `Type 1`)) %>% 
+	ggplot(aes(x = `Type 1`, y = avg.strength)) +
+		geom_segment(aes(xend = `Type 1`, yend = 0)) +
+		geom_point(size = 3, color = "tomato") +
+		coord_flip() +
+		labs(title = "Average overall strengths for each type",
+			subtitle = "excluding legendary Pokémons",
+			x = "Type", y = "Average strength") +
+		theme_minimal()</pre>
+							<img src="./image/pokemon-plot-1.png" width="650" alt="Lollipop chart of average overall strength for each type">
+						</div>
+						<p>
+							The visualization shows that the "Dragon" type is the strongest and the "Bug" type is the weakest overall. It also shows the order of the strengths of each pokémon's type. For example, it shows that "Fire" type pokémons are stronger than "Water" ones, and "Water" ones are stronger than "Grass" ones on average.
+						</p>
+					</div>
+					<div id="viz2">
+						<h2>Base stats comparison of particular legendary pokémons</h2>
+						<p>
+							Next, to answer the second question, I'm going to create a rader chart to compare the attributes of some legendary pokémons. Each generation has a different set of legendary pokémons, and you only need to choose between pokémons in the same generations. In order to make a better decision on which legendary pokémon to catch, you only need to compare the base statistics between a certain set of legendary pokémons.
+						</p>
+						<p>
+							With this in mind, I'll focus on the first generation's legendary pokémons <a href="https://www.pokemon.com/us/pokedex/articuno" target="_blank"><i>Articuno</i></a>, <a href="https://www.pokemon.com/us/pokedex/moltres" target="_blank"><i>Moltres</i></a>, and <a href="https://www.pokemon.com/us/pokedex/zapdos" target="_blank"><i>Zapdos</i></a>.
+						</p>
+						<p>
+							To do this, I'm going to filter rows about those pokémons and obtain a tidy dataset with their names and attributes. In mapping the data into visualization, I used <a href="https://www.r-graph-gallery.com/spider-or-radar-chart.html" target="_blank">the R Graph Gallery</a> as a reference.
+						</p>
+						<div class="visualization">
+						<pre>
+<span class="comment"># filter data about Articuno, Moltres, and Zapdos</span>
+legendary &lt;- pokemon %>% 
+	filter(Name %in% c("Articuno", "Zapdos", "Moltres")) %>% 
+	select(Name, HP, Attack, Defense, `Sp. Atk`, `Sp. Def`, Speed)
+
+<span class="comment"># obtain a tidy data</span>
+legendary &lt;- gather(legendary, "attribute", "value", 2:7) %>% 
+	arrange(attribute)
+
+<span class="comment"># map into the visualization</span>
+ggplot(legendary, mapping = aes(x = attribute, y = value, group = Name)) +
+	geom_polygon(aes(color = Name, fill = Name), alpha = 0.2) +
+	coord_polar() +
+	ylim(70, 130) +
+	labs(title = "Base stats comparison of Articuno, Moltres & Zapdos",
+		subtitle = "3 legendary Pokémons from Generation 1",
+		x = "", y = "Value", color = "", fill = "") +
+	theme_minimal()</pre>
+						<img src="./image/pokemon-plot-2.png" width="650" alt="Rader chart for base stats of Articuno, Moltres, and Zapdos">
+						</div>
+						<p>
+							The visualization shows that <i>Articuno</i>, <i>Moltres</i>, and <i>Zapdos</i> all have the same amount of HP. <i>Articuno</i> is stornger in defence while <i>Moltres</i> is stronger in attack. <i>Zapdos</i> is the fastest and stronger in Special Attack but has less resistance against both physical and special attacks.
+						</p>
+					</div>
+				</div>
+				<div class="sidebar" id="right">
+					<ul>
+						<li><h4>Related links</h4></li>
+						<li>
+							kaggle
+							<ul class="sub-list">
+								<li><a href="https://www.kaggle.com/abcsds/pokemon" target="_blank">Pokemon with stats</a></li>
+							</ul>
+						</li>
+						<li>
+							The R Graph Gallery
+							<ul class="sub-list">
+							<li><a href="https://www.r-graph-gallery.com/lollipop-plot.html" target="_blank">Lollipop plot</a></li>
+							<li><a href="https://www.r-graph-gallery.com/spider-or-radar-chart.html" target="_blank">Radar chart</a></li>
+							</ul>
+						</li>
+						<li>
+							Pokémon Index
+							<ul class="sub-list">
+								<li><a href="https://www.pokemon.com/us/pokedex/bulbasaur" target="_blank">Bulbasaur</a></li>
+								<li><a href="https://www.pokemon.com/us/pokedex/charmander" target="_blank">Charmander</a></li>
+								<li><a href="https://www.pokemon.com/us/pokedex/squirtle" target="_blank">Squirtle</a></li>
+								<li><a href="https://www.pokemon.com/us/pokedex/articuno" target="_blank">Articuno</a></li>
+								<li><a href="https://www.pokemon.com/us/pokedex/moltres" target="_blank">Moltres</a></li>
+								<li><a href="https://www.pokemon.com/us/pokedex/zapdos" target="_blank">Zapdos</a></li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
